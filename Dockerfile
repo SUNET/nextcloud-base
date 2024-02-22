@@ -134,5 +134,5 @@ RUN cd /var/www/html/ && patch -p 1 < s3sdknomultipart-53ba30db9fcd168dd7a38fb93
 
 
 # CLEAN UP
-RUN apt remove -y wget curl make npm patch && apt autoremove -y
+RUN apt remove -y curl make npm patch && apt autoremove -y
 RUN rm -rf /tmp/*.tar.* && chown -R www-data:root /var/www/html && rm -rf /var/lib/apt/lists/*
