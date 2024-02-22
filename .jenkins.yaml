@@ -1,0 +1,15 @@
+---
+environment_variables:
+  NEXTCLOUD_VERSION: "28.0.2.6-1"
+git:
+  branch: main
+triggers:
+  cron: "@daily"
+clean_workspace: true
+builders:
+  - docker
+docker_name: drive/nextcloud-base
+docker_tags:
+  - "${NEXTCLOUD_VERSION}"
+  - "latest"
+docker_no_cache: true
