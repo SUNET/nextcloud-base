@@ -134,3 +134,7 @@ RUN cd /var/www/html/ && patch -p 1 < s3sdknomultipart-53ba30db9fcd168dd7a38fb93
 COPY ./3195d57f29bebe0cd7199d74d963b5af.patch /var/www/html/3195d57f29bebe0cd7199d74d963b5af.patch
 RUN cd /var/www/html/ && patch -p 1 < 3195d57f29bebe0cd7199d74d963b5af.patch
 
+
+# CLEAN UP
+RUN apt remove -y curl make npm patch && apt autoremove -y
+RUN rm -rf /tmp/*.tar.* && chown -R www-data:root /var/www/html && rm -rf /var/lib/apt/lists/*
