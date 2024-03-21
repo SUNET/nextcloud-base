@@ -1,5 +1,5 @@
 diff --git a/lib/private/AllConfig.php b/lib/private/AllConfig.php
-index 92178d646352b..7a54de2b7bb08 100644
+index 92178d646352..7a54de2b7bb0 100644
 --- a/lib/private/AllConfig.php
 +++ b/lib/private/AllConfig.php
 @@ -334,7 +334,7 @@ public function getUserValue($userId, $appName, $key, $default = '') {
