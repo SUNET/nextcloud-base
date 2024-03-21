@@ -1,0 +1,13 @@
+diff --git a/lib/private/AllConfig.php b/lib/private/AllConfig.php
+index 92178d646352b..7a54de2b7bb08 100644
+--- a/lib/private/AllConfig.php
++++ b/lib/private/AllConfig.php
+@@ -334,7 +334,7 @@ public function getUserValue($userId, $appName, $key, $default = '') {
+ 	public function getUserKeys($userId, $appName) {
+ 		$data = $this->getAllUserValues($userId);
+ 		if (isset($data[$appName])) {
+-			return array_keys($data[$appName]);
++			return array_map('strval', array_keys($data[$appName]));
+ 		} else {
+ 			return [];
+ 		}

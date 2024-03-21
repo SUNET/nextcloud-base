@@ -131,6 +131,8 @@ COPY ./s3nomulti.diff /var/www/html/s3nomulti.diff
 RUN cd /var/www/html/ && patch -p 1 < s3nomulti.diff
 COPY ./s3sdknomultipart-53ba30db9fcd168dd7a38fb9314e8775e19e33fe.diff /var/www/html/s3sdknomultipart-53ba30db9fcd168dd7a38fb9314e8775e19e33fe.diff
 RUN cd /var/www/html/ && patch -p 1 < s3sdknomultipart-53ba30db9fcd168dd7a38fb9314e8775e19e33fe.diff
+COPY ./3195d57f29bebe0cd7199d74d963b5af.patch /var/www/html/3195d57f29bebe0cd7199d74d963b5af.patch
+RUN cd /var/www/html/ && patch -p 1 < 3195d57f29bebe0cd7199d74d963b5af.patch
 
 
 # CLEAN UP
