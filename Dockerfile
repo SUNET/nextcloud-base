@@ -116,7 +116,7 @@ COPY --chown=root:root ./cron.sh /cron.sh
 RUN usermod -a -G tty www-data
 
 FROM php as nextcloud
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/27.1.6-a5b3751e/nextcloud-27.1.6-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/28.0.4-e294d241/nextcloud-28.0.4-enterprise.zip
 
 ## DONT ADD STUFF BETWEEN HERE
 RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
@@ -129,10 +129,6 @@ RUN php /var/www/html/occ integrity:check-core
 ## VARIOUS PATCHES COMES HERE IF NEEDED
 COPY ./s3nomulti.diff /var/www/html/s3nomulti.diff
 RUN cd /var/www/html/ && patch -p 1 < s3nomulti.diff
-COPY ./s3sdknomultipart-53ba30db9fcd168dd7a38fb9314e8775e19e33fe.diff /var/www/html/s3sdknomultipart-53ba30db9fcd168dd7a38fb9314e8775e19e33fe.diff
-RUN cd /var/www/html/ && patch -p 1 < s3sdknomultipart-53ba30db9fcd168dd7a38fb9314e8775e19e33fe.diff
-COPY ./3195d57f29bebe0cd7199d74d963b5af.patch /var/www/html/3195d57f29bebe0cd7199d74d963b5af.patch
-RUN cd /var/www/html/ && patch -p 1 < 3195d57f29bebe0cd7199d74d963b5af.patch
 
 
 # CLEAN UP
