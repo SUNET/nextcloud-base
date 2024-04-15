@@ -127,8 +127,8 @@ RUN php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
 ## VARIOUS PATCHES COMES HERE IF NEEDED
-COPY ./s3nomulti.diff /var/www/html/s3nomulti.diff
-RUN cd /var/www/html/ && patch -p 1 < s3nomulti.diff
+#COPY ./s3nomulti.diff /var/www/html/s3nomulti.diff
+#RUN cd /var/www/html/ && patch -p 1 < s3nomulti.diff
 
 
 # CLEAN UP
