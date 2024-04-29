@@ -116,7 +116,7 @@ COPY --chown=root:root ./cron.sh /cron.sh
 RUN usermod -a -G tty www-data
 
 FROM php as nextcloud
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/28.0.4-e294d241/nextcloud-28.0.4-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/28.0.5-e8f8c96a/nextcloud-28.0.5-enterprise.zip
 
 ## DONT ADD STUFF BETWEEN HERE
 RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
@@ -127,8 +127,8 @@ RUN php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
 ## VARIOUS PATCHES COMES HERE IF NEEDED
-#COPY ./s3nomulti.diff /var/www/html/s3nomulti.diff
-#RUN cd /var/www/html/ && patch -p 1 < s3nomulti.diff
+COPY ./s3nomulti.diff /var/www/html/s3nomulti.diff
+RUN cd /var/www/html/ && patch -p 1 < s3nomulti.diff
 
 
 # CLEAN UP
