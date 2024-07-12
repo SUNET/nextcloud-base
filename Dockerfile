@@ -32,6 +32,9 @@ RUN set -ex; \
   vim \
   wget > /dev/null
 
+RUN set -ex; \
+  apt-get -q install -y --only-upgrade apache2
+
 RUN wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
   && dpkg -i ./rclone-current-linux-amd64.deb \
   && rm ./rclone-current-linux-amd64.deb
