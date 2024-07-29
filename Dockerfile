@@ -1,4 +1,4 @@
-FROM php:8.3-apache-bookworm as apt
+FROM php:8.2-apache-bullseye as apt
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 # Pre-requisites for the extensions
