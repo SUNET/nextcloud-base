@@ -1,4 +1,4 @@
-FROM php:8.2-rc-apache-bullseye as apt
+FROM php:8.3-apache-bookworm as apt
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 # Pre-requisites for the extensions
@@ -31,9 +31,6 @@ RUN set -ex; \
   unzip \
   vim \
   wget > /dev/null
-
-RUN set -ex; \
-  apt-get -q install -y --only-upgrade apache2
 
 RUN wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
   && dpkg -i ./rclone-current-linux-amd64.deb \
@@ -119,7 +116,7 @@ COPY --chown=root:root ./cron.sh /cron.sh
 RUN usermod -a -G tty www-data
 
 FROM php as nextcloud
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/28.0.6-2d8b3373/nextcloud-28.0.6-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/29.0.4-076b07d8/nextcloud-29.0.4-enterprise.zip
 
 ## DONT ADD STUFF BETWEEN HERE
 RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
@@ -130,9 +127,6 @@ RUN php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
 ## VARIOUS PATCHES COMES HERE IF NEEDED
-COPY ./s3nomulti.diff /var/www/html/s3nomulti.diff
-RUN cd /var/www/html/ && patch -p 1 < s3nomulti.diff
-
 
 # CLEAN UP
 RUN apt remove -y curl make npm patch && apt autoremove -y
