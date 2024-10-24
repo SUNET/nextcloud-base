@@ -89,6 +89,11 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
+# Patch files_trashbin
+COPY ./files_trashbin.patch /var/www/html/
+RUN cd /var/www/html/ && \
+  patch -p1 < ./files_trashbin.patch && \
+  rm files_trashbin.patch
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
