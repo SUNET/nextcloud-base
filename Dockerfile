@@ -98,10 +98,11 @@ COPY --from=build /var/www/html /var/www/html
 COPY --from=build /etc/apache2 /etc/apache2
 COPY --from=build /usr/local/etc/php /usr/local/etc/php
 RUN apt update && apt install -y \
-  wget \
   mariadb-client \
   redis-tools \
+  ssl-cert \
   vim \
+  wget \
   && wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
   && dpkg -i ./rclone-current-linux-amd64.deb \
   && rm ./rclone-current-linux-amd64.deb
