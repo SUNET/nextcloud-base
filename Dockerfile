@@ -22,7 +22,6 @@ RUN { \
       libzip* \
       npm \
       zlib* \
-      curl \
       gnupg2 \
       make \
       npm \
@@ -91,19 +90,21 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 FROM php:8.2-apache-bullseye
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ=Etc/UTC
+
 COPY --chown=root:root ./cron.sh /cron.sh
 COPY --from=build /var/www/html /var/www/html
 COPY --from=build /etc/apache2 /etc/apache2
 COPY --from=build /usr/local/etc/php /usr/local/etc/php
-RUN wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
+RUN apt update && apt install -y \
+  wget \
+  mariadb-client \
+  redis-tools \
+  vim \
+  && wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
   && dpkg -i ./rclone-current-linux-amd64.deb \
-  && rm ./rclone-current-linux-amd64.deb && \
-  apt update && apt install -y \
-      mariadb-client \
-      redis-tools \
-      vim
+  && rm ./rclone-current-linux-amd64.deb
 
 ## ADD www-data to tty group
 RUN usermod -a -G tty www-data
-
-
