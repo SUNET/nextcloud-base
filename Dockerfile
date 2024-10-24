@@ -104,11 +104,23 @@ COPY --from=build /etc/apache2 /etc/apache2
 COPY --from=build /usr/local /usr/local
 
 RUN apt update && apt install -y \
+  freetype* \
+  libgmp* \
+  libicu* \
+  libldap* \
+  libmagickwand* \
+  libmemcached* \
+  libpng* \
+  libpq* \
+  libweb* \
+  libzip* \
   mariadb-client \
+  npm \
   redis-tools \
   ssl-cert \
   vim \
   wget \
+  zlib* \
   && wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
   && dpkg -i ./rclone-current-linux-amd64.deb \
   && rm ./rclone-current-linux-amd64.deb
