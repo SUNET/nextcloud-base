@@ -101,8 +101,7 @@ ARG TZ=Etc/UTC
 COPY --chown=root:root ./cron.sh /cron.sh
 COPY --from=build /var/www/html /var/www/html
 COPY --from=build /etc/apache2 /etc/apache2
-COPY --from=build /usr/local/etc/php /usr/local/etc/php
-COPY --from=build /usr/local/lib/php /usr/local/lib/php/
+COPY --from=build /usr/local/ /usr/local/
 
 RUN apt update && apt install -y \
   mariadb-client \
