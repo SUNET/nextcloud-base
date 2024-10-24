@@ -98,32 +98,36 @@ FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 
-COPY --chown=root:root ./cron.sh /cron.sh
-COPY --from=build /var/www/html /var/www/html
-COPY --from=build /etc/apache2 /etc/apache2
-COPY --from=build /usr/local /usr/local
-
 RUN apt update && apt install -y \
-  freetype* \
-  libgmp* \
-  libicu* \
-  libldap* \
-  libmagickwand* \
-  libmemcached* \
-  libpng* \
-  libpq* \
-  libweb* \
-  libzip* \
+  libfreetype6 \
+  libgmp10 \
+  libicu67 \
+  libldap-2.4-2 \
+  libmagickwand-6.q16-6 \
+  libmagickwand-6.q16hdri-6 \
+  libmemcached11 \
+  libpng16-16 \
+  libpq5 \
+  libwebm1 \
+  libwebp6 \
+  libwebpmux3 \
+  libwebsockets16 \
+  libzip4 \
   mariadb-client \
   npm \
   redis-tools \
   ssl-cert \
   vim \
   wget \
-  zlib* \
+  zlib1g \
   && wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
   && dpkg -i ./rclone-current-linux-amd64.deb \
   && rm ./rclone-current-linux-amd64.deb
+
+COPY --chown=root:root ./cron.sh /cron.sh
+COPY --from=build /var/www/html /var/www/html
+COPY --from=build /etc/apache2 /etc/apache2
+COPY --from=build /usr/local /usr/local
 
 ## ADD www-data to tty group
 RUN usermod -a -G tty www-data
