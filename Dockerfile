@@ -94,6 +94,19 @@ COPY ./files_trashbin.patch /var/www/html/
 RUN cd /var/www/html/ && \
   patch -p1 < ./files_trashbin.patch && \
   rm files_trashbin.patch
+# Tokenerror patch
+COPY ./tokenerror.patch /var/www/html/
+RUN cd /var/www/html && \
+  apt-get update && apt-get install -y patch && \
+  patch -p1 < ./tokenerror.patch && \
+  rm tokenerror.patch
+
+# Temporary sunet build of user_saml
+RUN wget https://github.com/SUNET/user_saml/releases/download/v6.3.1/user_saml.tar.gz -O /tmp/user_saml.tar.gz && \
+  rm -rf /var/www/html/apps/user_saml && \
+  tar -xzf /tmp/user_saml.tar.gz -C /var/www/html/apps/
+
+
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
