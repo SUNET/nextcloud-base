@@ -1,5 +1,5 @@
 FROM php:8.2-apache-bullseye as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/29.0.9-f47a6f01/nextcloud-29.0.9-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/29.0.8-3ccdd31d/nextcloud-29.0.8-enterprise.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG APACHE_RUN_DIR=/var/run/apache2
@@ -89,18 +89,16 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
-# Tokenerror patch
-COPY ./tokenerror.patch /var/www/html/
-RUN cd /var/www/html && \
-  apt-get update && apt-get install -y patch && \
-  patch -p1 < ./tokenerror.patch && \
-  rm tokenerror.patch
-
 # Temporary sunet build of user_saml
-RUN wget https://github.com/SUNET/user_saml/releases/download/v6.3.1/user_saml.tar.gz -O /tmp/user_saml.tar.gz && \
+RUN wget https://github.com/SUNET/user_saml/releases/download/v6.3.0/user_saml.tar.gz -O /tmp/user_saml.tar.gz && \
   rm -rf /var/www/html/apps/user_saml && \
   tar -xzf /tmp/user_saml.tar.gz -C /var/www/html/apps/
 
+# Patch files_trashbin
+COPY ./files_trashbin.patch /var/www/html/
+RUN cd /var/www/html/ && \
+  patch -p1 < ./files_trashbin.patch && \
+  rm files_trashbin.patch
 
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
