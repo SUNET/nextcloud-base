@@ -89,12 +89,6 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
-# Tokenerror patch
-COPY ./tokenerror.patch /var/www/html/
-RUN cd /var/www/html && \
-  apt-get update && apt-get install -y patch && \
-  patch -p1 < ./tokenerror.patch && \
-  rm tokenerror.patch
 
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
