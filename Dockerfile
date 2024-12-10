@@ -1,4 +1,4 @@
-FROM php:8.2-apache as build
+FROM php:8.2-apache-bullseye as build
 ARG nc_download_url=https://download.nextcloud.com/.customers/server/29.0.10.3-8c310825/nextcloud-29.0.10.3-enterprise.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
@@ -96,7 +96,7 @@ RUN cd /var/www/html && \
   patch -p1 < ./tokenerror.patch && \
   rm tokenerror.patch
 
-FROM php:8.2-apache
+FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 
