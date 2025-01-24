@@ -1,5 +1,5 @@
 FROM php:8.2-apache-bullseye as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/29.0.10.3-8c310825/nextcloud-29.0.10.3-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/30.0.5-0aa0e2ff/nextcloud-30.0.5-enterprise.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG APACHE_RUN_DIR=/var/run/apache2
