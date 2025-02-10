@@ -90,10 +90,6 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
-## TEMP patch for user_saml
-RUN wget -q https://github.com/SUNET/user_saml/releases/download/v6.3.0/user_saml.tar.gz -O /tmp/user_saml.tar.gz \
-  && rm -rf /var/www/html/apps/user_saml && tar -xzf /tmp/user_saml.tar.gz -C /var/www/html/apps
-
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
