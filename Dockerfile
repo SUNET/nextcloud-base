@@ -1,4 +1,4 @@
-FROM php:8.2-apache-bullseye as build
+FROM php:8.3-apache-trixie as build
 ARG nc_download_url=https://download.nextcloud.com/.customers/server/30.0.14-a2d2b3b6/nextcloud-30.0.14-enterprise.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
