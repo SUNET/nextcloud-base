@@ -35,6 +35,7 @@ RUN { \
       php${php_version}-mbstring \
       php${php_version}-memcached \
       php${php_version}-mysql \
+      php${php_version}-sqlite3 \
       php${php_version}-phpdbg \
       php${php_version}-posix \
       php${php_version}-redis \
