@@ -18,12 +18,14 @@ RUN { \
       apt-get -q update > /dev/null && apt-get install -y \
       apache2 \
       ffmpeg \
+      imagemagick \
       libapache2-mod-php${php_version} \
       mariadb-client \
       npm \
       patch \
       php${php_version} \
       php${php_version}-apcu \
+      php${php_version}-bcmath \
       php${php_version}-ctype \
       php${php_version}-curl \
       php${php_version}-dom \
@@ -49,7 +51,7 @@ RUN { \
       > /dev/null; \
       update-alternatives --set php /usr/bin/php${php_version}; \
       update-alternatives --set phpdbg /usr/bin/phpdbg${php_version}; \
-      phpenmod apcu ctype curl dom fileinfo gd mbstring memcached pdo_mysql pdo_sqlite posix redis simplexml xml xmlreader xmlwriter zip; \
+      phpenmod apcu bcmath ctype curl dom fileinfo gd mbstring memcached pdo_mysql pdo_sqlite posix redis simplexml xml xmlreader xmlwriter zip; \
       a2enmod dir env headers mime rewrite setenvif deflate ssl; \
       echo "ServerName localhost" | tee /etc/apache2/conf-available/servername.conf \
       && a2enconf servername; \
