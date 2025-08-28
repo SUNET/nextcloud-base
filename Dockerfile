@@ -61,13 +61,15 @@ RUN { \
 RUN wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
   && dpkg -i ./rclone-current-linux-amd64.deb 
 ## DONT ADD STUFF BETWEEN HERE
-RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
-  && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata && mkdir /var/www/html/config \
-  && cp -a /tmp/nextcloud/* /var/www/html && cp -a /tmp/nextcloud/.[^.]* /var/www/html \
+RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip \
+  && rm -rf /var/www/html/  \
+  && mv /tmp/nextcloud /var/www/html \
+  && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata \
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ \
-  && rm -rf ./rclone-current-linux-amd64.deb /tmp/nextcloud \
-  /tmp/newcloud.zip /var/www/html/nextcloud.zip
-#RUN su - www-data -s /bin/bash -c "/var/www/html/occ integrity:check-core"
+  && rm -rf ./rclone-current-linux-amd64.deb \
+  /tmp/newcloud.zip 
+
+RUN su - www-data -s /bin/bash -c "/var/www/html/occ integrity:check-core"
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
 # Copy over files
