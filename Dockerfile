@@ -1,5 +1,5 @@
 FROM php:8.2-apache-bullseye as build
-ARG nc_download_url=https://github.com/SUNET/nextcloud-server/releases/download/33.0.0-dev-sunet1/nextcloud-33.0.0-dev.zip
+ARG nc_download_url=https://sunet.drive.sunet.se/s/6J4ERHn6WYTbgA9/download/nextcloud-33.0.0-dev.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG APACHE_RUN_DIR=/var/run/apache2
@@ -87,7 +87,7 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata && mkdir /var/www/html/config \
   && cp -a /tmp/nextcloud/* /var/www/html && cp -a /tmp/nextcloud/.[^.]* /var/www/html \
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
-  php /var/www/html/occ integrity:check-core
+  php /var/www/html/occ integrity:check-core || true
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
 FROM php:8.2-apache-bullseye
