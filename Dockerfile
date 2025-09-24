@@ -1,16 +1,29 @@
-FROM debian:trixie-slim as build
-
-ENV nc_download_url=https://download.nextcloud.com/.customers/server/30.0.14-a2d2b3b6/nextcloud-30.0.14-enterprise.zip
-ENV php_version=8.2
-
+FROM php:8.2-apache-bullseye as build
+ARG nc_download_url=https://download.nextcloud.com/server/prereleases/nextcloud-32.0.0rc3.zip
+ARG APACHE_DOCUMENT_ROOT=/var/www/html
+ARG APACHE_LOG_DIR=/var/log/apache2
+ARG APACHE_RUN_DIR=/var/run/apache2
+ARG APACHE_LOCK_DIR=/var/lock/apache2
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 # Install dependencies
 RUN { \
       apt-get -q update > /dev/null && apt-get -q install -y \
-      apt-transport-https \
-      ca-certificates\
-      curl\
+      apt-utils \
+      build-essential \
+      freetype* \
+      git \
+      libgmp* \
+      libicu* \
+      libldap* \
+      libmagickwand* \
+      libmemcached* \
+      libpng* \
+      libpq* \
+      libweb* \
+      libzip* \
+      npm \
+      zlib* \
       gnupg2 \
       lsb-release \
       > /dev/null; \
@@ -61,15 +74,12 @@ RUN { \
 RUN wget -q https://downloads.rclone.org/rclone-current-linux-amd64.deb \
   && dpkg -i ./rclone-current-linux-amd64.deb 
 ## DONT ADD STUFF BETWEEN HERE
-RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip \
-  && rm -rf /var/www/html/  \
-  && mv /tmp/nextcloud /var/www/html \
-  && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata \
+RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
+  && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata && mkdir /var/www/html/config \
+  && cp -a /tmp/nextcloud/* /var/www/html && cp -a /tmp/nextcloud/.[^.]* /var/www/html \
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ \
-  && rm -rf ./rclone-current-linux-amd64.deb \
-  /tmp/newcloud.zip 
-
-RUN su - www-data -s /bin/bash -c "/var/www/html/occ integrity:check-core"
+  && php /var/www/html/occ maintenance:install --admin-user admin --admin-pass admin \
+  && php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
 # Copy over files
