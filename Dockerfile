@@ -1,5 +1,4 @@
 FROM php:8.2-apache-bullseye as build
-ARG nc_download_url=https://sunet.drive.sunet.se/s/6J4ERHn6WYTbgA9/download/nextcloud-33.0.0-dev.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG APACHE_RUN_DIR=/var/run/apache2
@@ -83,11 +82,12 @@ RUN { \
     }
 COPY --chown=root:root ./000-default.conf /etc/apache2/sites-available/
 ## DONT ADD STUFF BETWEEN HERE
-RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
-  && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata && mkdir /var/www/html/config \
-  && cp -a /tmp/nextcloud/* /var/www/html && cp -a /tmp/nextcloud/.[^.]* /var/www/html \
-  && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
-  php /var/www/html/occ integrity:check-core || true
+RUN wget https://raw.githubusercontent.com/composer/getcomposer.org/f3108f64b4e1c1ce6eb462b159956461592b3e3e/web/installer -O - -q | php -- --quiet
+RUN cd /var/www && git clone https://github.com/nextcloud/server.git html && cd html && git submodule update && \
+    composer install && npm ci && npm run build && \
+    cd apps && wget https://sunet.drive.sunet.se/s/DjBHNFwjmsLp2S4/download/viewer-33.0.0-dev.zip -O viewer.zip && \
+    unzip viewer.zip && rm viewer.zip && \
+    chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
 FROM php:8.2-apache-bullseye
