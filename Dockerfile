@@ -1,5 +1,5 @@
-FROM php:8.3-apache-trixie as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/30.0.14-a2d2b3b6/nextcloud-30.0.14-enterprise.zip
+FROM php:8.2-apache-bullseye as build
+ARG nc_download_url=https://download.nextcloud.com/server/prereleases/nextcloud-32.0.0rc3.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG APACHE_RUN_DIR=/var/run/apache2
@@ -11,6 +11,7 @@ RUN { \
       apt-utils \
       build-essential \
       freetype* \
+      git \
       libgmp* \
       libicu* \
       libldap* \
@@ -86,8 +87,9 @@ COPY --chown=root:root ./000-default.conf /etc/apache2/sites-available/
 RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
   && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata && mkdir /var/www/html/config \
   && cp -a /tmp/nextcloud/* /var/www/html && cp -a /tmp/nextcloud/.[^.]* /var/www/html \
-  && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
-  php /var/www/html/occ integrity:check-core
+  && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ \
+  && php /var/www/html/occ maintenance:install --admin-user admin --admin-pass admin \
+  && php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
 FROM php:8.2-apache-bullseye
