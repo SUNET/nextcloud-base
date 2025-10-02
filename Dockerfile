@@ -1,5 +1,5 @@
 FROM php:8.2-apache-bullseye as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/31.0.9-7593122c/nextcloud-31.0.9-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/server/releases/nextcloud-32.0.0.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG APACHE_RUN_DIR=/var/run/apache2
@@ -83,12 +83,20 @@ RUN { \
     }
 COPY --chown=root:root ./000-default.conf /etc/apache2/sites-available/
 ## DONT ADD STUFF BETWEEN HERE
-RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
-  && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata && mkdir /var/www/html/config \
-  && cp -a /tmp/nextcloud/* /var/www/html && cp -a /tmp/nextcloud/.[^.]* /var/www/html \
-  && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
-  php /var/www/html/occ integrity:check-core
+RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip \
+  && rm -rf /var/www/html && mv /tmp/nextcloud/ /var/www/html  \
+  && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata \
+  && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ
+#  php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
+COPY ./55471.diff /var/www/html
+COPY ./55634.diff /var/www/html
+COPY ./55648.diff /var/www/html
+COPY ./response.diff /var/www/html
+RUN cd /var/www/html && patch -p1 < 55471.diff && rm /var/www/html/55471.diff && \
+    patch -p1 < 55634.diff && rm /var/www/html/55634.diff && \
+    patch -p1 < 55648.diff && rm /var/www/html/55648.diff && \
+    patch -p1 < response.diff && rm /var/www/html/response.diff
 
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive

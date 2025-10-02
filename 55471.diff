@@ -1,0 +1,54 @@
+diff --git a/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php b/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php
+index a76b1884a0be7..e15d57181a369 100644
+--- a/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php
++++ b/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php
+@@ -236,7 +236,7 @@ public function addShare($shareWith, $name, $description, $providerId, $owner, $
+ 	 *
+ 	 * @param string $recipientProvider The address of the recipent's provider
+ 	 * @param string $token The token used for the invitation
+-	 * @param string $userId The userId of the recipient at the recipient's provider
++	 * @param string $userID The userID of the recipient at the recipient's provider
+ 	 * @param string $email The email address of the recipient
+ 	 * @param string $name The display name of the recipient
+ 	 *
+@@ -251,8 +251,8 @@ public function addShare($shareWith, $name, $description, $providerId, $owner, $
+ 	#[PublicPage]
+ 	#[NoCSRFRequired]
+ 	#[BruteForceProtection(action: 'inviteAccepted')]
+-	public function inviteAccepted(string $recipientProvider, string $token, string $userId, string $email, string $name): JSONResponse {
+-		$this->logger->debug('Processing share invitation for ' . $userId . ' with token ' . $token . ' and email ' . $email . ' and name ' . $name);
++	public function inviteAccepted(string $recipientProvider, string $token, string $userID, string $email, string $name): JSONResponse {
++		$this->logger->debug('Processing share invitation for ' . $userID . ' with token ' . $token . ' and email ' . $email . ' and name ' . $name);
+ 
+ 		$updated = $this->timeFactory->getTime();
+ 
+@@ -309,7 +309,7 @@ public function inviteAccepted(string $recipientProvider, string $token, string
+ 		$invitation->setRecipientEmail($email);
+ 		$invitation->setRecipientName($name);
+ 		$invitation->setRecipientProvider($recipientProvider);
+-		$invitation->setRecipientUserId($userId);
++		$invitation->setRecipientUserId($userID);
+ 		$invitation->setAcceptedAt($updated);
+ 		$invitation = $this->federatedInviteMapper->update($invitation);
+ 
+diff --git a/lib/private/OCM/Model/OCMProvider.php b/lib/private/OCM/Model/OCMProvider.php
+index fdf25b0501b80..09fe383675bf6 100644
+--- a/lib/private/OCM/Model/OCMProvider.php
++++ b/lib/private/OCM/Model/OCMProvider.php
+@@ -227,6 +227,7 @@ public function import(array $data): static {
+ 		}
+ 		$this->setResourceTypes($resources);
+ 		$this->setInviteAcceptDialog($data['inviteAcceptDialog'] ?? '');
++		$this->setCapabilities($data['capabilities'] ?? []);
+ 
+ 		if (isset($data['publicKey'])) {
+ 			// import details about the remote request signing public key, if available
+@@ -268,6 +269,7 @@ public function jsonSerialize(): array {
+ 			'version' => $this->getApiVersion(), // informative but real version
+ 			'endPoint' => $this->getEndPoint(),
+ 			'publicKey' => $this->getSignatory()?->jsonSerialize(),
++			'provider' => $this->getProvider(),
+ 			'resourceTypes' => $resourceTypes
+ 		];
+ 
+
