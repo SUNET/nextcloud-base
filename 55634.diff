@@ -1,18 +1,3 @@
-diff --git a/apps/federatedfilesharing/lib/Notifications.php b/apps/federatedfilesharing/lib/Notifications.php
-index 613c05613efb1..13448d299ef9d 100644
---- a/apps/federatedfilesharing/lib/Notifications.php
-+++ b/apps/federatedfilesharing/lib/Notifications.php
-@@ -359,6 +359,10 @@ protected function tryLegacyEndPoint($remoteDomain, $urlSuffix, array $fields) {
- 	 * @return array|false
- 	 */
- 	protected function tryOCMEndPoint($remoteDomain, $fields, $action) {
-+		if (str_starts_with($remoteDomain, 'https://')) {
-+			$remoteDomain = substr($remoteDomain, 8);
-+		}
-+
- 		switch ($action) {
- 			case 'share':
- 				$share = $this->cloudFederationFactory->getCloudFederationShare(
 diff --git a/lib/private/Federation/CloudFederationNotification.php b/lib/private/Federation/CloudFederationNotification.php
 index 6ae805df1d98c..d8f6d87f3e237 100644
 --- a/lib/private/Federation/CloudFederationNotification.php
