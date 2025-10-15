@@ -92,13 +92,14 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
 COPY ./55471.diff /var/www/html
 COPY ./55634.diff /var/www/html
 COPY ./55648.diff /var/www/html
-COPY ./response.diff /var/www/html
+COPY ./55752.diff /var/www/html
 COPY ./userlength.diff /var/www/html
-RUN cd /var/www/html && patch -p1 < 55471.diff && rm /var/www/html/55471.diff && \
+RUN cd /var/www/html && \
+    patch -p1 < 55471.diff && rm /var/www/html/55471.diff && \
     patch -p1 < 55634.diff && rm /var/www/html/55634.diff && \
     patch -p1 < 55648.diff && rm /var/www/html/55648.diff && \
-    patch -p1 < userlength.diff && rm /var/www/html/userlength.diff && \
-    patch -p1 < response.diff && rm /var/www/html/response.diff
+    patch -p1 < 55752.diff && rm /var/www/html/55752.diff && \
+    patch -p1 < userlength.diff && rm /var/www/html/userlength.diff
 
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
