@@ -93,9 +93,11 @@ COPY ./55471.diff /var/www/html
 COPY ./55634.diff /var/www/html
 COPY ./55648.diff /var/www/html
 COPY ./response.diff /var/www/html
+COPY ./userlength.diff /var/www/html
 RUN cd /var/www/html && patch -p1 < 55471.diff && rm /var/www/html/55471.diff && \
     patch -p1 < 55634.diff && rm /var/www/html/55634.diff && \
     patch -p1 < 55648.diff && rm /var/www/html/55648.diff && \
+    patch -p1 < userlength.diff && rm /var/www/html/userlength.diff && \
     patch -p1 < response.diff && rm /var/www/html/response.diff
 
 FROM php:8.2-apache-bullseye
