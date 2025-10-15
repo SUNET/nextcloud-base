@@ -1,0 +1,246 @@
+diff --git a/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php b/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php
+index a76b1884a0b..ba994e4e143 100644
+--- a/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php
++++ b/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php
+@@ -106,6 +106,22 @@ class RequestHandlerController extends Controller {
+ 	#[NoCSRFRequired]
+ 	#[BruteForceProtection(action: 'receiveFederatedShare')]
+ 	public function addShare($shareWith, $name, $description, $providerId, $owner, $ownerDisplayName, $sharedBy, $sharedByDisplayName, $protocol, $shareType, $resourceType) {
++		if ($resourceType === 'folder') {
++			$resourceType = 'file';
++		}
++		if ($protocol['name'] === 'multi') {
++			if (isset($protocol['webdav'])) {
++				$webdav = $protocol['webdav'];
++				$protocol = [
++					'name' => 'webdav',
++					'options' => [
++						'sharedSecret' => $webdav['sharedSecret'],
++						'permissions' => '{http://open-cloud-mesh.org/ns}share-permissions',
++					],
++				];
++			}
++		}
++
+ 		try {
+ 			// if request is signed and well signed, no exception are thrown
+ 			// if request is not signed and host is known for not supporting signed request, no exception are thrown
+@@ -115,7 +128,6 @@ class RequestHandlerController extends Controller {
+ 			$this->logger->warning('incoming request exception', ['exception' => $e]);
+ 			return new JSONResponse(['message' => $e->getMessage(), 'validationErrors' => []], Http::STATUS_BAD_REQUEST);
+ 		}
+-
+ 		// check if all required parameters are set
+ 		if (
+ 			$shareWith === null
+@@ -236,7 +248,7 @@ class RequestHandlerController extends Controller {
+ 	 *
+ 	 * @param string $recipientProvider The address of the recipent's provider
+ 	 * @param string $token The token used for the invitation
+-	 * @param string $userId The userId of the recipient at the recipient's provider
++	 * @param string $userID The userID of the recipient at the recipient's provider
+ 	 * @param string $email The email address of the recipient
+ 	 * @param string $name The display name of the recipient
+ 	 *
+@@ -251,8 +263,8 @@ class RequestHandlerController extends Controller {
+ 	#[PublicPage]
+ 	#[NoCSRFRequired]
+ 	#[BruteForceProtection(action: 'inviteAccepted')]
+-	public function inviteAccepted(string $recipientProvider, string $token, string $userId, string $email, string $name): JSONResponse {
+-		$this->logger->debug('Processing share invitation for ' . $userId . ' with token ' . $token . ' and email ' . $email . ' and name ' . $name);
++	public function inviteAccepted(string $recipientProvider, string $token, string $userID, string $email, string $name): JSONResponse {
++		$this->logger->debug('Processing share invitation for ' . $userID . ' with token ' . $token . ' and email ' . $email . ' and name ' . $name);
+ 
+ 		$updated = $this->timeFactory->getTime();
+ 
+@@ -309,7 +321,7 @@ class RequestHandlerController extends Controller {
+ 		$invitation->setRecipientEmail($email);
+ 		$invitation->setRecipientName($name);
+ 		$invitation->setRecipientProvider($recipientProvider);
+-		$invitation->setRecipientUserId($userId);
++		$invitation->setRecipientUserId($userID);
+ 		$invitation->setAcceptedAt($updated);
+ 		$invitation = $this->federatedInviteMapper->update($invitation);
+ 
+diff --git a/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php b/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php
+index 1ce639532e8..48956ffbfcc 100644
+--- a/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php
++++ b/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php
+@@ -108,7 +108,7 @@ class CloudFederationProviderFiles implements ISignedCloudFederationProvider {
+ 
+ 		$token = $share->getShareSecret();
+ 		$name = $share->getResourceName();
+-		$owner = $share->getOwnerDisplayName();
++		$owner = $share->getOwner();
+ 		$sharedBy = $share->getSharedByDisplayName();
+ 		$shareWith = $share->getShareWith();
+ 		$remoteId = $share->getProviderId();
+@@ -130,15 +130,14 @@ class CloudFederationProviderFiles implements ISignedCloudFederationProvider {
+ 
+ 			// FIXME this should be a method in the user management instead
+ 			if ($shareType === IShare::TYPE_USER) {
+-				$this->logger->debug('shareWith before, ' . $shareWith, ['app' => 'files_sharing']);
+ 				Util::emitHook(
+ 					'\OCA\Files_Sharing\API\Server2Server',
+ 					'preLoginNameUsedAsUserName',
+ 					['uid' => &$shareWith]
+ 				);
+-				$this->logger->debug('shareWith after, ' . $shareWith, ['app' => 'files_sharing']);
+ 
+ 				if (!$this->userManager->userExists($shareWith)) {
++					$this->logger->debug('shareWith user does not exist, ' . $shareWith, ['app' => 'files_sharing']);
+ 					throw new ProviderCouldNotAddShareException('User does not exists', '', Http::STATUS_BAD_REQUEST);
+ 				}
+ 
+diff --git a/lib/private/Federation/CloudFederationNotification.php b/lib/private/Federation/CloudFederationNotification.php
+index 6ae805df1d9..d8f6d87f3e2 100644
+--- a/lib/private/Federation/CloudFederationNotification.php
++++ b/lib/private/Federation/CloudFederationNotification.php
+@@ -32,7 +32,7 @@ class CloudFederationNotification implements ICloudFederationNotification {
+ 		$this->message = [
+ 			'notificationType' => $notificationType,
+ 			'resourceType' => $resourceType,
+-			'providerId' => $providerId,
++			'providerId' => (string)$providerId,
+ 			'notification' => $notification,
+ 		];
+ 	}
+diff --git a/lib/private/Federation/CloudFederationShare.php b/lib/private/Federation/CloudFederationShare.php
+index 2eb06b3acea..6bd35cea763 100644
+--- a/lib/private/Federation/CloudFederationShare.php
++++ b/lib/private/Federation/CloudFederationShare.php
+@@ -124,7 +124,7 @@ class CloudFederationShare implements ICloudFederationShare {
+ 	 * @since 14.0.0
+ 	 */
+ 	public function setProviderId($providerId) {
+-		$this->share['providerId'] = $providerId;
++		$this->share['providerId'] = (string)$providerId;
+ 	}
+ 
+ 	/**
+diff --git a/lib/private/OCM/Model/OCMProvider.php b/lib/private/OCM/Model/OCMProvider.php
+index fdf25b0501b..09fe383675b 100644
+--- a/lib/private/OCM/Model/OCMProvider.php
++++ b/lib/private/OCM/Model/OCMProvider.php
+@@ -227,6 +227,7 @@ class OCMProvider implements ICapabilityAwareOCMProvider {
+ 		}
+ 		$this->setResourceTypes($resources);
+ 		$this->setInviteAcceptDialog($data['inviteAcceptDialog'] ?? '');
++		$this->setCapabilities($data['capabilities'] ?? []);
+ 
+ 		if (isset($data['publicKey'])) {
+ 			// import details about the remote request signing public key, if available
+@@ -268,6 +269,7 @@ class OCMProvider implements ICapabilityAwareOCMProvider {
+ 			'version' => $this->getApiVersion(), // informative but real version
+ 			'endPoint' => $this->getEndPoint(),
+ 			'publicKey' => $this->getSignatory()?->jsonSerialize(),
++			'provider' => $this->getProvider(),
+ 			'resourceTypes' => $resourceTypes
+ 		];
+ 
+diff --git a/lib/private/OCM/OCMDiscoveryService.php b/lib/private/OCM/OCMDiscoveryService.php
+index f93ba5086a2..f0fc69fd34a 100644
+--- a/lib/private/OCM/OCMDiscoveryService.php
++++ b/lib/private/OCM/OCMDiscoveryService.php
+@@ -101,22 +101,39 @@ class OCMDiscoveryService implements IOCMDiscoveryService {
+ 			if ($this->config->getSystemValueBool('sharing.federation.allowSelfSignedCertificates') === true) {
+ 				$options['verify'] = false;
+ 			}
+-			$response = $client->get($remote . '/ocm-provider/', $options);
+-
+-			$body = null;
+-			if ($response->getStatusCode() === Http::STATUS_OK) {
+-				$body = $response->getBody();
+-				// update provider with data returned by the request
+-				$provider->import(json_decode($body, true, 8, JSON_THROW_ON_ERROR) ?? []);
+-				$this->cache->set($remote, $body, 60 * 60 * 24);
+-				$this->remoteProviders[$remote] = $provider;
+-				return $provider;
++			$urls = [
++				$remote . '/.well-known/ocm',
++				$remote . '/ocm-provider',
++			];
++
++			foreach ($urls as $url) {
++				$body = null;
++				$status = null;
++				try {
++					$response = $client->get($url, $options);
++					if ($response->getStatusCode() === Http::STATUS_OK) {
++						$body = $response->getBody();
++						$status = $response->getStatusCode();
++						// update provider with data returned by the request
++						$provider->import(json_decode($body, true, 8, JSON_THROW_ON_ERROR) ?? []);
++						$this->cache->set($remote, $body, 60 * 60 * 24);
++						$this->remoteProviders[$remote] = $provider;
++						return $provider;
++					}
++				} catch (\Exception $e) {
++					$this->logger->debug("Tried unsuccesfully to do discovery at: {$url}", [
++						'exception' => $e,
++						'remote' => $remote
++					]);
++					continue;
++				}
+ 			}
+ 
++
+ 			throw new OCMProviderException('invalid remote ocm endpoint');
+ 		} catch (JsonException|OCMProviderException) {
+ 			$this->cache->set($remote, false, 5 * 60);
+-			throw new OCMProviderException('data returned by remote seems invalid - status:' . $response->getStatusCode() . ' - ' . ($body ?? ''));
++			throw new OCMProviderException('data returned by remote seems invalid - status: ' . ($status ?? '') . ' - body: ' . ($body ?? ''));
+ 		} catch (\Exception $e) {
+ 			$this->cache->set($remote, false, 5 * 60);
+ 			$this->logger->warning('error while discovering ocm provider', [
+
+diff --git a/lib/private/Federation/CloudIdManager.php b/lib/private/Federation/CloudIdManager.php
+index c599d9046a67e..b0996d5179c6c 100644
+--- a/lib/private/Federation/CloudIdManager.php
++++ b/lib/private/Federation/CloudIdManager.php
+@@ -108,7 +108,7 @@ public function resolveCloudId(string $cloudId): ICloudId {
+ 			// We accept slightly more chars when working with federationId than with a local userId.
+ 			// We remove those eventual chars from the UserId before using
+ 			// the IUserManager API to confirm its format.
+-			$this->userManager->validateUserId(str_replace('=', '-', $user));
++			$this->validateUser($user, $remote);
+ 
+ 			if (!empty($user) && !empty($remote)) {
+ 				$remote = $this->ensureDefaultProtocol($remote);
+@@ -118,6 +118,36 @@ public function resolveCloudId(string $cloudId): ICloudId {
+ 		throw new \InvalidArgumentException('Invalid cloud id');
+ 	}
+ 
++	protected function validateUser(string $user, string $remote): void {
++		// Check the ID for bad characters
++		// Allowed are: "a-z", "A-Z", "0-9", spaces and "_.@-'" (Nextcloud)
++		// Additional: "=" (oCIS)
++		if (preg_match('/[^a-zA-Z0-9 _.@\-\'=]/', $user)) {
++			throw new \InvalidArgumentException('Invalid characters');
++		}
++
++		// No empty user ID
++		if (trim($user) === '') {
++			throw new \InvalidArgumentException('Empty user');
++		}
++
++		// No whitespace at the beginning or at the end
++		if (trim($user) !== $user) {
++			throw new \InvalidArgumentException('User contains whitespace at the beginning or at the end');
++		}
++
++		// User ID only consists of 1 or 2 dots (directory traversal)
++		if ($user === '.' || $user === '..') {
++			throw new \InvalidArgumentException('User must not consist of dots only');
++		}
++
++		// User ID is too long
++		if (strlen($user . '@' . $remote) > 255) {
++			// TRANSLATORS User ID is too long
++			throw new \InvalidArgumentException('Cloud id is too long');
++		}
++	}
++
+ 	public function getDisplayNameFromContact(string $cloudId): ?string {
+ 		$cachedName = $this->displayNameCache->get($cloudId);
+ 		if ($cachedName !== null) {

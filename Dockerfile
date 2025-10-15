@@ -89,17 +89,9 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ
 #  php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
-COPY ./55471.diff /var/www/html
-COPY ./55634.diff /var/www/html
-COPY ./55648.diff /var/www/html
-COPY ./55752.diff /var/www/html
-COPY ./userlength.diff /var/www/html
+COPY ./onebigpatch.diff /var/www/html
 RUN cd /var/www/html && \
-    patch -p1 < 55471.diff && rm /var/www/html/55471.diff && \
-    patch -p1 < 55634.diff && rm /var/www/html/55634.diff && \
-    patch -p1 < 55648.diff && rm /var/www/html/55648.diff && \
-    patch -p1 < 55752.diff && rm /var/www/html/55752.diff && \
-    patch -p1 < userlength.diff && rm /var/www/html/userlength.diff
+    patch -p1 < onebigpatch.diff && rm /var/www/html/onebigpatch.diff
 
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
