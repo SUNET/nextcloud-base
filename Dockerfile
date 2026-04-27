@@ -90,6 +90,10 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
+COPY ./security-april-2026-32.patch /var/www/html/security-april-2026-32.patch
+RUN cd /var/www/html && patch -p1 < security-april-2026-32.patch && rm security-april-2026-32.patch \
+  && chown -R www-data:root /var/www/html
+
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
