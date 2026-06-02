@@ -1,5 +1,5 @@
 FROM php:8.2-apache-bullseye as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/32.0.8-f4c25eae/nextcloud-32.0.8-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/32.0.9-e5afad9c/nextcloud-32.0.9-enterprise.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG APACHE_RUN_DIR=/var/run/apache2
@@ -89,10 +89,6 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
-
-COPY ./security-april-2026-32.patch /var/www/html/security-april-2026-32.patch
-RUN cd /var/www/html && patch -p1 < security-april-2026-32.patch && rm security-april-2026-32.patch \
-  && chown -R www-data:root /var/www/html
 
 FROM php:8.2-apache-bullseye
 ARG DEBIAN_FRONTEND=noninteractive
