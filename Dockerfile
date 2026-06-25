@@ -1,5 +1,5 @@
 FROM php:8.2-apache-bullseye as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/32.0.11-e9698ec2/nextcloud-32.0.11-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/33.0.6-8493f1bc/nextcloud-33.0.6-enterprise.zip
 ARG APACHE_DOCUMENT_ROOT=/var/www/html
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG APACHE_RUN_DIR=/var/run/apache2
@@ -59,14 +59,15 @@ RUN { \
       ; \
       a2enmod dir env headers mime rewrite setenvif deflate ssl; \
       { \
-        echo 'opcache.interned_strings_buffer=32'; \
-        echo 'opcache.memory_consumption=256'; \
+        echo 'opcache.interned_strings_buffer=64'; \
+        echo 'opcache.memory_consumption=512'; \
         echo 'opcache.save_comments=1'; \
         echo 'opcache.revalidate_freq=60'; \
       } > /usr/local/etc/php/conf.d/opcache-recommended.ini; \
       { \
         echo 'extension=apcu.so'; \
         echo 'apc.enable_cli=1'; \
+        echo 'apc.shm_size=256M'; \
       } > /usr/local/etc/php/conf.d/docker-php-ext-apcu.ini; \
       { \
         echo 'memory_limit = 2G'; \
