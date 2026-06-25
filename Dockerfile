@@ -59,14 +59,15 @@ RUN { \
       ; \
       a2enmod dir env headers mime rewrite setenvif deflate ssl; \
       { \
-        echo 'opcache.interned_strings_buffer=32'; \
-        echo 'opcache.memory_consumption=256'; \
+        echo 'opcache.interned_strings_buffer=64'; \
+        echo 'opcache.memory_consumption=512'; \
         echo 'opcache.save_comments=1'; \
         echo 'opcache.revalidate_freq=60'; \
       } > /usr/local/etc/php/conf.d/opcache-recommended.ini; \
       { \
         echo 'extension=apcu.so'; \
         echo 'apc.enable_cli=1'; \
+        echo 'apc.shm_size=256M'; \
       } > /usr/local/etc/php/conf.d/docker-php-ext-apcu.ini; \
       { \
         echo 'memory_limit = 2G'; \
