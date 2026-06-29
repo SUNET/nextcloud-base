@@ -1,9 +1,5 @@
-FROM php:8.4-apache-bullseye as build
+FROM php:8.4-fpm-bullseye as build
 ARG nc_download_url=https://download.nextcloud.com/.customers/server/33.0.6-8493f1bc/nextcloud-33.0.6-enterprise.zip
-ARG APACHE_DOCUMENT_ROOT=/var/www/html
-ARG APACHE_LOG_DIR=/var/log/apache2
-ARG APACHE_RUN_DIR=/var/run/apache2
-ARG APACHE_LOCK_DIR=/var/lock/apache2
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 RUN { \
@@ -57,10 +53,10 @@ RUN { \
       memcached \
       redis \
       ; \
-      a2enmod dir env headers mime rewrite setenvif deflate ssl; \
       { \
         echo 'opcache.interned_strings_buffer=64'; \
         echo 'opcache.memory_consumption=512'; \
+        echo 'opcache.max_accelerated_files=10000'; \
         echo 'opcache.save_comments=1'; \
         echo 'opcache.revalidate_freq=60'; \
       } > /usr/local/etc/php/conf.d/opcache-recommended.ini; \
@@ -76,13 +72,7 @@ RUN { \
         echo 'max_execution_time=86400'; \
         echo 'max_input_time=86400'; \
       } > /usr/local/etc/php/conf.d/nce.ini; \
-      echo "ServerName localhost" | tee /etc/apache2/conf-available/servername.conf \
-      && a2enconf servername; \
-      sed -i 's/^ServerTokens OS/ServerTokens Prod/' /etc/apache2/conf-available/security.conf; \
-      sed -i 's/^ServerSignature On/ServerSignature Off/' /etc/apache2/conf-available/security.conf; \
-      chmod -R 777 ${APACHE_RUN_DIR} ${APACHE_LOCK_DIR} ${APACHE_LOG_DIR} ${APACHE_DOCUMENT_ROOT}; \
     }
-COPY --chown=root:root ./000-default.conf /etc/apache2/sites-available/
 ## DONT ADD STUFF BETWEEN HERE
 RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
   && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata && mkdir /var/www/html/config \
@@ -91,11 +81,13 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
-FROM php:8.4-apache-bullseye
+FROM php:8.4-fpm-bullseye
+ARG APACHE_LOG_DIR=/var/log/apache2
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 
 RUN apt update && apt install -y \
+  apache2 \
   libfreetype6 \
   libgmp10 \
   libicu67 \
@@ -114,6 +106,7 @@ RUN apt update && apt install -y \
   npm \
   redis-tools \
   ssl-cert \
+  supervisor \
   vim \
   wget \
   zlib1g \
@@ -121,10 +114,32 @@ RUN apt update && apt install -y \
   && dpkg -i ./rclone-current-linux-amd64.deb \
   && rm ./rclone-current-linux-amd64.deb
 
+## Apache: serve via mpm_event + php-fpm over a unix socket (mod_php is gone).
+RUN a2dismod -f mpm_prefork mpm_worker 2>/dev/null; \
+    a2enmod mpm_event proxy proxy_fcgi setenvif headers env mime rewrite dir deflate ssl remoteip; \
+    echo "ServerName localhost" > /etc/apache2/conf-available/servername.conf && a2enconf servername; \
+    sed -i 's/^ServerTokens OS/ServerTokens Prod/' /etc/apache2/conf-available/security.conf; \
+    sed -i 's/^ServerSignature On/ServerSignature Off/' /etc/apache2/conf-available/security.conf; \
+    mkdir -p /run/php && chown www-data:www-data /run/php; \
+    chmod -R 777 ${APACHE_LOG_DIR}
+
+## Apache config (lives in /etc/apache2, untouched by the /usr/local copy below).
+## php-fpm proxy tuning: long timeouts so 30G uploads / long jobs don't 504.
+COPY ./apache-fpm.conf /etc/apache2/conf-available/zzz-nextcloud-fpm.conf
+COPY ./mpm_event.conf /etc/apache2/mods-available/mpm_event.conf
+COPY ./000-default.conf /etc/apache2/sites-available/
+COPY ./supervisord.conf /etc/supervisor/supervisord.conf
 COPY --chown=root:root ./cron.sh /cron.sh
+RUN a2enconf zzz-nextcloud-fpm && a2ensite 000-default
+
+## Bring in the built PHP runtime + Nextcloud, THEN lay down the fpm pool so the
+## /usr/local copy can't restore the stock www.conf / zz-docker.conf (listen=9000).
 COPY --from=build /var/www/html /var/www/html
-COPY --from=build /etc/apache2 /etc/apache2
 COPY --from=build /usr/local /usr/local
+COPY ./php-fpm-www.conf /usr/local/etc/php-fpm.d/zzz-nextcloud.conf
+RUN rm -f /usr/local/etc/php-fpm.d/www.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 ## ADD www-data to tty group
 RUN usermod -a -G tty www-data
+
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
