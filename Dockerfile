@@ -1,5 +1,5 @@
 FROM php:8.4-fpm-bullseye as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/33.0.6-8493f1bc/nextcloud-33.0.6-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/33.0.9-993307a1/nextcloud-33.0.9-enterprise.zip
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 RUN { \
