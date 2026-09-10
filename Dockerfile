@@ -1,5 +1,5 @@
-FROM php:8.2-fpm-bullseye as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/32.0.8-f4c25eae/nextcloud-32.0.8-enterprise.zip
+FROM php:8.4-fpm-bullseye as build
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/33.0.6-8493f1bc/nextcloud-33.0.6-enterprise.zip
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 RUN { \
@@ -54,8 +54,8 @@ RUN { \
       redis \
       ; \
       { \
-        echo 'opcache.interned_strings_buffer=32'; \
-        echo 'opcache.memory_consumption=256'; \
+        echo 'opcache.interned_strings_buffer=64'; \
+        echo 'opcache.memory_consumption=512'; \
         echo 'opcache.max_accelerated_files=10000'; \
         echo 'opcache.save_comments=1'; \
         echo 'opcache.revalidate_freq=60'; \
@@ -63,6 +63,7 @@ RUN { \
       { \
         echo 'extension=apcu.so'; \
         echo 'apc.enable_cli=1'; \
+        echo 'apc.shm_size=256M'; \
       } > /usr/local/etc/php/conf.d/docker-php-ext-apcu.ini; \
       { \
         echo 'memory_limit = 2G'; \
@@ -80,11 +81,7 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
-COPY ./4605cceab65668b2d7dbac2b48078633.patch /var/www/html/4605cceab65668b2d7dbac2b48078633.patch
-RUN cd /var/www/html && patch -p1 < 4605cceab65668b2d7dbac2b48078633.patch && rm 4605cceab65668b2d7dbac2b48078633.patch \
-  && chown -R www-data:root /var/www/html
-
-FROM php:8.2-fpm-bullseye
+FROM php:8.4-fpm-bullseye
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
