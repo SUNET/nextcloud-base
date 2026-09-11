@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-bullseye as build
+FROM php:8.4-fpm-trixie as build
 ARG nc_download_url=https://download.nextcloud.com/.customers/server/33.0.9-993307a1/nextcloud-33.0.9-enterprise.zip
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
@@ -81,7 +81,7 @@ RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tm
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
 
-FROM php:8.4-fpm-bullseye
+FROM php:8.4-fpm-trixie
 ARG APACHE_LOG_DIR=/var/log/apache2
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
