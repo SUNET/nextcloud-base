@@ -76,7 +76,7 @@ RUN { \
 ## DONT ADD STUFF BETWEEN HERE
 RUN wget -q ${nc_download_url} -O /tmp/nextcloud.zip && cd /tmp && unzip -qq /tmp/nextcloud.zip && cd /tmp/nextcloud \
   && mkdir -p /var/www/html/data && echo '# Nextcloud data directory' > /var/www/html/data/.ncdata && mkdir /var/www/html/config \
-  && cp -a /tmp/nextcloud/* /var/www/html && cp -a /tmp/nextcloud/.[^.]* /var/www/html \
+  && cp -a /tmp/nextcloud/* /var/www/html && find /tmp/nextcloud -maxdepth 1 -name '.?*' ! -name '.' ! -name '..' -exec cp -a {} /var/www/html \; \
   && chown -R www-data:root /var/www/html && chmod +x /var/www/html/occ; \
   php /var/www/html/occ integrity:check-core
 ## AND HERE, OR CODE INTEGRITY CHECK MIGHT FAIL, AND IMAGE WILL NOT BUILD
@@ -90,18 +90,18 @@ RUN apt update && apt install -y \
   apache2 \
   libfreetype6 \
   libgmp10 \
-  libicu67 \
-  libldap-2.4-2 \
-  libmagickwand-6.q16-6 \
-  libmagickwand-6.q16hdri-6 \
-  libmemcached11 \
-  libpng16-16 \
+  libicu76 \
+  libldap2 \
+  libmagickwand-7.q16-10 \
+  libmagickwand-7.q16hdri-10 \
+  libmemcached11t64 \
+  libpng16-16t64 \
   libpq5 \
   libwebm1 \
-  libwebp6 \
+  libwebp7 \
   libwebpmux3 \
-  libwebsockets16 \
-  libzip4 \
+  libwebsockets19t64 \
+  libzip5 \
   mariadb-client \
   npm \
   redis-tools \
