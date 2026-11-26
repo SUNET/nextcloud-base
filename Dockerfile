@@ -1,5 +1,5 @@
 FROM php:8.4.28-fpm-trixie as build
-ARG nc_download_url=https://download.nextcloud.com/.customers/server/33.0.10-5845f75b/nextcloud-33.0.10-enterprise.zip
+ARG nc_download_url=https://download.nextcloud.com/.customers/server/34.0.6-71df2c2e/nextcloud-34.0.6-enterprise.zip
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 RUN { \
